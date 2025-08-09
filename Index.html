@@ -1,140 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#0f172a" />
-  <title>SalahTracker — Daily Prayer Tracker</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f5132" />
+    <title>Salah Tracker — Track your prayers</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- PWA / Manifest -->
+    <link rel="manifest" href="/manifest.json" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Favicons / icons (place your icons in /icons) -->
+    <link rel="icon" href="/icons/icon48.png" sizes="48x48" />
 
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app" id="app" data-theme="dark">
-    <header class="site-header glass">
-      <div class="header-content">
-        <div class="logo-section">
-          <div class="logo-icon">🕌</div>
-          <div>
-            <h1 class="logo-text">SalahTracker</h1>
-            <div class="tagline">Track • Visualize • Improve — with intention</div>
-          </div>
-        </div>
-        <div class="header-actions">
-          <button id="themeToggle" class="icon-btn" title="Toggle theme">
-            <span class="theme-icon">🌙</span>
-          </button>
-          <a class="btn btn-primary glow" href="data-manager.html" id="openData">
-            <span class="btn-icon">📊</span>
-            Data Manager
-          </a>
-        </div>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- Meta for social sharing (optional) -->
+    <meta name="description" content="Salah Tracker — simple web app to log and visualise daily prayers, build consistency in worship." />
+
+    <!-- Optional: include fonts here -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet"> -->
+
+  </head>
+
+  <body>
+    <header class="app-header">
+      <div class="container header-inner">
+        <h1 class="app-title">Salah Tracker</h1>
+        <nav class="header-actions">
+          <button id="open-data-manager" class="btn">Data Manager</button>
+          <button id="open-settings" class="btn btn-ghost">Settings</button>
+        </nav>
       </div>
     </header>
 
     <main class="container">
-      <section class="card hero-card glass">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="title-icon">📝</span> Daily Prayer Tracker
+      <!-- Quick status / today summary -->
+      <section id="today-summary" class="card">
+        <div class="summary-row">
+          <div>
+            <h2>Today — <span id="today-date">Loading...</span></h2>
+            <p id="timezone">Timezone: <span id="tz-value">Local</span></p>
           </div>
-          <div class="date-selector-wrapper">
-            <label for="dateSelectMain" class="sr-only">Select Date</label>
-            <select id="dateSelectMain" class="date-selector"></select>
+          <div class="progress-wrap">
+            <label for="daily-progress">Daily Completion</label>
+            <progress id="daily-progress" value="0" max="5">0%</progress>
+            <div id="progress-text">0/5 prayers</div>
           </div>
-        </div>
-
-        <form id="trackerForm" class="tracker-form" onsubmit="return false;">
-          <div id="prayerList" class="prayer-grid"></div>
-
-          <div class="controls">
-            <button id="saveMain" class="btn btn-success pulse" type="button">
-              <span class="btn-icon">💾</span> Save Progress
-            </button>
-            <button id="clearDate" class="btn btn-outline" type="button">
-              <span class="btn-icon">🗑️</span> Clear Day
-            </button>
-            <button id="markAllJamaat" class="btn btn-outline" type="button">
-              <span class="btn-icon">✅</span> Mark All Congregation
-            </button>
-          </div>
-
-          <div class="info-note">
-            <span class="note-icon">💡</span>
-            Only today and the past 2 days can be edited here. Use Data Manager for older entries.
-          </div>
-        </form>
-      </section>
-
-      <section class="stats-grid">
-        <div class="card progress-card glass">
-          <div class="card-header mini">
-            <div class="card-title small"><span class="title-icon">📈</span> 15-Day Progress</div>
-          </div>
-          <div class="progress-section">
-            <div class="progress-ring-container">
-              <div class="progress-ring">
-                <div class="progress-ring-circle" id="progressRing"></div>
-                <div class="progress-ring-text">
-                  <span id="progressPercent">0%</span>
-                  <small>Complete</small>
-                </div>
-              </div>
-            </div>
-            <div class="progress-stats">
-              <div class="stat">
-                <div class="stat-value" id="totalPrayers">0</div>
-                <div class="stat-label">Total Prayers</div>
-              </div>
-              <div class="stat">
-                <div class="stat-value" id="streakCount">0</div>
-                <div class="stat-label">Day Streak</div>
-              </div>
-            </div>
-          </div>
-          <div id="heatmapPreview" class="heatmap-preview"></div>
-        </div>
-
-        <div class="card chart-card glass">
-          <div class="card-header mini">
-            <div class="card-title small"><span class="title-icon">📊</span> Daily Performance</div>
-          </div>
-          <canvas id="chartDaily" height="200"></canvas>
         </div>
       </section>
 
-      <section class="card chart-card-wide glass">
-        <div class="card-header">
-          <div class="card-title"><span class="title-icon">🎯</span> Prayer Performance (15 Days)</div>
+      <!-- Prayer list -->
+      <section id="prayer-list" class="card">
+        <h3>Prayers</h3>
+        <ul id="prayers" class="prayer-grid" aria-live="polite">
+          <!-- JS will populate prayer rows (Fajr, Dhuhr, Asr, Maghrib, Isha) -->
+        </ul>
+      </section>
+
+      <!-- Visualisation -->
+      <section id="analytics" class="card">
+        <h3>Consistency Chart</h3>
+        <canvas id="prayerChart" width="600" height="300" aria-label="Prayer consistency chart"></canvas>
+        <div class="chart-controls">
+          <button id="zoom-week" class="btn small">7 days</button>
+          <button id="zoom-month" class="btn small">30 days</button>
+          <button id="export-csv" class="btn small">Export CSV</button>
         </div>
-        <canvas id="chartPerPrayer" height="160"></canvas>
+      </section>
+
+      <!-- Footer actions -->
+      <section class="card actions">
+        <button id="mark-all-today" class="btn primary">Mark All Done</button>
+        <button id="clear-today" class="btn danger">Clear Today</button>
+        <a href="/README.md" class="link">Project README</a>
       </section>
     </main>
 
-    <footer class="footer glass">
-      <div class="footer-content">
-        <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيم</div>
-        <div class="footer-text">Keep the discipline. Track your progress. Improve with intention.</div>
+    <!-- Data Manager modal fallback link for small screens -->
+    <div id="data-manager-modal" class="modal" hidden>
+      <div class="modal-inner">
+        <button id="close-data-manager" class="modal-close">×</button>
+        <iframe src="/data-manager.html" title="Data Manager" class="modal-frame"></iframe>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <div class="container">
+        <small>Made with intention • Track your ibadah • &copy; <span id="year"></span></small>
+        <div class="footer-links">
+          <a href="https://github.com/Ibrahim-Salman19/Salah-tracker" target="_blank" rel="noopener">GitHub</a>
+        </div>
       </div>
     </footer>
-  </div>
 
-  <script src="app.js"></script>
-  <script src="charts.js"></script>
+    <!-- App scripts -->
+    <script>
+      // Small boot utility to set static values early
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('today-date').textContent = new Date().toLocaleDateString();
 
-  <script>
-    // register service worker (works only over http/https)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(()=>console.log('SW registered'))
-        .catch((e)=>console.warn('SW failed', e));
-    }
-  </script>
-</body>
+      // Register service worker if available
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('SW registration failed:', err));
+        });
+      }
+    </script>
+
+    <!-- main app logic and charts (defer to the files you already have) -->
+    <script src="/app.js" defer></script>
+    <script src="/charts.js" defer></script>
+  </body>
 </html>
+
