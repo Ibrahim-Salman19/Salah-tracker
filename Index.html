@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>SalahTracker — Daily Prayer Tracker</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app" data-theme="dark">
+    <header class="site-header glass">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo-icon">🕌</div>
+          <div>
+            <h1 class="logo-text">SalahTracker</h1>
+            <div class="tagline">Track • Visualize • Improve — with intention</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggle" class="icon-btn" title="Toggle theme">
+            <span class="theme-icon">🌙</span>
+          </button>
+          <a class="btn btn-primary glow" href="data-manager.html" id="openData">
+            <span class="btn-icon">📊</span>
+            Data Manager
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card hero-card glass">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="title-icon">📝</span> Daily Prayer Tracker
+          </div>
+          <div class="date-selector-wrapper">
+            <label for="dateSelectMain" class="sr-only">Select Date</label>
+            <select id="dateSelectMain" class="date-selector"></select>
+          </div>
+        </div>
+
+        <form id="trackerForm" class="tracker-form" onsubmit="return false;">
+          <div id="prayerList" class="prayer-grid"></div>
+
+          <div class="controls">
+            <button id="saveMain" class="btn btn-success pulse" type="button">
+              <span class="btn-icon">💾</span> Save Progress
+            </button>
+            <button id="clearDate" class="btn btn-outline" type="button">
+              <span class="btn-icon">🗑️</span> Clear Day
+            </button>
+            <button id="markAllJamaat" class="btn btn-outline" type="button">
+              <span class="btn-icon">✅</span> Mark All Congregation
+            </button>
+          </div>
+
+          <div class="info-note">
+            <span class="note-icon">💡</span>
+            Only today and the past 2 days can be edited here. Use Data Manager for older entries.
+          </div>
+        </form>
+      </section>
+
+      <section class="stats-grid">
+        <div class="card progress-card glass">
+          <div class="card-header mini">
+            <div class="card-title small"><span class="title-icon">📈</span> 15-Day Progress</div>
+          </div>
+          <div class="progress-section">
+            <div class="progress-ring-container">
+              <div class="progress-ring">
+                <div class="progress-ring-circle" id="progressRing"></div>
+                <div class="progress-ring-text">
+                  <span id="progressPercent">0%</span>
+                  <small>Complete</small>
+                </div>
+              </div>
+            </div>
+            <div class="progress-stats">
+              <div class="stat">
+                <div class="stat-value" id="totalPrayers">0</div>
+                <div class="stat-label">Total Prayers</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="streakCount">0</div>
+                <div class="stat-label">Day Streak</div>
+              </div>
+            </div>
+          </div>
+          <div id="heatmapPreview" class="heatmap-preview"></div>
+        </div>
+
+        <div class="card chart-card glass">
+          <div class="card-header mini">
+            <div class="card-title small"><span class="title-icon">📊</span> Daily Performance</div>
+          </div>
+          <canvas id="chartDaily" height="200"></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-card-wide glass">
+        <div class="card-header">
+          <div class="card-title"><span class="title-icon">🎯</span> Prayer Performance (15 Days)</div>
+        </div>
+        <canvas id="chartPerPrayer" height="160"></canvas>
+      </section>
+    </main>
+
+    <footer class="footer glass">
+      <div class="footer-content">
+        <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيم</div>
+        <div class="footer-text">Keep the discipline. Track your progress. Improve with intention.</div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="charts.js"></script>
+
+  <script>
+    // register service worker (works only over http/https)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(()=>console.log('SW registered'))
+        .catch((e)=>console.warn('SW failed', e));
+    }
+  </script>
+</body>
+</html>

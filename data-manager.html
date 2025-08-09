@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SalahTracker — Data Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="appData" data-theme="dark">
+    <header class="site-header glass">
+      <div class="header-content">
+        <div class="logo-section"><div class="logo-icon">📊</div><div><h1 class="logo-text">Data Manager</h1><div class="tagline">Manage • Import • Export</div></div></div>
+        <div class="header-actions"><a class="btn btn-primary glow" href="index.html"><span class="btn-icon">🏠</span>Back to Tracker</a></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card hero-card glass">
+        <div class="card-header"><div class="card-title"><span class="title-icon">⚡</span> Quick Actions</div></div>
+        <div class="action-grid">
+          <button id="newDateRow" class="action-btn"><div class="action-icon">📅</div><div class="action-text"><div class="action-title">Add Today</div><div class="action-desc">Create entry for today if missing</div></div></button>
+          <button id="exportJson" class="action-btn"><div class="action-icon">📋</div><div class="action-text"><div class="action-title">Export JSON</div><div class="action-desc">Download backup</div></div></button>
+          <button id="exportCsv" class="action-btn"><div class="action-icon">📈</div><div class="action-text"><div class="action-title">Export CSV</div><div class="action-desc">For spreadsheets</div></div></button>
+          <button id="importJson" class="action-btn"><div class="action-icon">📥</div><div class="action-text"><div class="action-title">Import Data</div><div class="action-desc">Restore from file</div></div></button>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </section>
+
+      <section class="card glass">
+        <div class="card-header"><div class="card-title"><span class="title-icon">📝</span> Prayer Records</div><div class="table-controls"><input type="search" id="dateFilter" placeholder="Search dates..." class="search-input"><select id="monthFilter" class="month-filter"><option value="">All Months</option></select></div></div>
+        <div class="table-wrapper">
+          <table id="dataTable" class="data-table">
+            <thead>
+              <tr><th class="date-col">Date</th><th>Fajr</th><th>Dhuhr</th><th>Asr</th><th>Maghrib</th><th>Isha</th><th>Score</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="analytics-grid">
+        <div class="card stats-card glass"><div class="card-header mini"><div class="card-title small"><span class="title-icon">📊</span> Overview Stats</div></div>
+          <div class="stats-container"><div class="stat-item"><div class="stat-icon">📅</div><div class="stat-info"><div class="stat-value" id="totalDays">0</div><div class="stat-label">Total Days Tracked</div></div></div>
+          <div class="stat-item"><div class="stat-icon">🎯</div><div class="stat-info"><div class="stat-value" id="avgScore">0</div><div class="stat-label">Average Daily Score</div></div></div>
+          <div class="stat-item"><div class="stat-icon">🏆</div><div class="stat-info"><div class="stat-value" id="bestStreak">0</div><div class="stat-label">Best Streak (Days)</div></div></div>
+          <div class="stat-item"><div class="stat-icon">🕌</div><div class="stat-info"><div class="stat-value" id="congregationRate">0%</div><div class="stat-label">Congregation Rate</div></div></div></div>
+        </div>
+        <div class="card chart-card glass"><div class="card-header mini"><div class="card-title small"><span class="title-icon">📈</span> 30-Day Trend</div></div><canvas id="managerChart" height="200"></canvas></div>
+      </section>
+
+      <section class="card glass"><div class="card-header"><div class="card-title"><span class="title-icon">📊</span> Prayer Performance by Month</div></div><canvas id="monthlyChart" height="160"></canvas></section>
+    </main>
+
+    <footer class="footer glass"><div class="footer-content"><div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيم</div><div class="footer-text">Always backup your data before making changes.</div></div></footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="charts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('importJson').addEventListener('click', () => document.getElementById('importFile').click());
+      document.getElementById('importFile').addEventListener('change', (ev) => appHelpers.importFile(ev));
+      document.getElementById('exportJson').addEventListener('click', () => appHelpers.exportJson());
+      document.getElementById('exportCsv').addEventListener('click', () => appHelpers.exportCsv());
+      document.getElementById('newDateRow').addEventListener('click', () => appHelpers.addToday());
+
+      setTimeout(() => {
+        appHelpers.renderDataTable();
+        appHelpers.renderManagerOverview();
+        updateManagerStats();
+        populateMonthFilter();
+        initializeFilters();
+      }, 200);
+    });
+
+    function updateManagerStats() {
+      const data = appHelpers.loadData();
+      const dates = Object.keys(data);
+      document.getElementById('totalDays').textContent = dates.length;
+      let totalScore = 0, validDays = 0;
+      dates.forEach(date => {
+        const entry = data[date];
+        if (entry) {
+          totalScore += dayScore(entry);
+          validDays++;
+        }
+      });
+      document.getElementById('avgScore').textContent = validDays? (totalScore/validDays).toFixed(1) : 0;
+      // congregation rate
+      let cong=0, total=0;
+      dates.forEach(date => {
+        const entry = data[date];
+        if (entry) PRAYERS.forEach(p => { const s = entry[p.key]; if (s && s!=='') { total++; if (s==='congregation') cong++; }});
+      });
+      document.getElementById('congregationRate').textContent = total? Math.round(cong/total*100)+'%' : '0%';
+      // best streak simple
+      const sorted = dates.slice().sort();
+      let best=0, cur=0;
+      for (let i=0;i<sorted.length;i++){
+        if (i===0 || isConsecutiveDay(sorted[i-1], sorted[i])) cur++;
+        else { best = Math.max(best, cur); cur = 1; }
+      }
+      best = Math.max(best, cur);
+      document.getElementById('bestStreak').textContent = best;
+    }
+
+    function isConsecutiveDay(date1, date2){
+      const d1 = dateKeyToDate(date1), d2 = dateKeyToDate(date2);
+      return daysBetween(d2, d1) === 1;
+    }
+
+    function populateMonthFilter() {
+      const monthFilter = document.getElementById('monthFilter');
+      const data = appHelpers.loadData();
+      const months = new Set();
+      Object.keys(data).forEach(date => months.add(date.substring(0,7)));
+      Array.from(months).sort().reverse().forEach(month => {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = new Date(month+'-01').toLocaleDateString(undefined, {year:'numeric', month:'long'});
+        monthFilter.appendChild(option);
+      });
+    }
+
+    function initializeFilters(){
+      const dateFilter = document.getElementById('dateFilter');
+      const monthFilter = document.getElementById('monthFilter');
+      function filterTable(){
+        const q = dateFilter.value.toLowerCase();
+        const m = monthFilter.value;
+        const rows = document.querySelectorAll('#dataTable tbody tr');
+        rows.forEach(row=>{
+          const dc = row.querySelector('.date-cell'); if (!dc) return;
+          const date = dc.textContent;
+          const matchesDate = date.toLowerCase().includes(q);
+          const matchesMonth = !m || date.startsWith(m);
+          row.style.display = matchesDate && matchesMonth ? '' : 'none';
+        });
+      }
+      dateFilter.addEventListener('input', filterTable);
+      monthFilter.addEventListener('change', filterTable);
+    }
+  </script>
+</body>
+</html>

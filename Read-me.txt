@@ -1,0 +1,8 @@
+1) Save files into a single folder. Create /icons/ and put icon-192.png and icon-512.png there.
+2) Open PowerShell in folder.
+3) If not installed: npm install -g http-server
+4) Run: http-server
+5) Open http://127.0.0.1:8080 on your laptop.
+6) On mobile (same Wi-Fi) open http://<your-laptop-ip>:8080 (e.g. 192.168.100.8:8080)
+7) To test PWA install, open site in mobile Chrome -> menu -> Add to Home screen.
+8) To clear all data: open DevTools -> Application -> Local Storage -> delete key 'salahTracker_v1'.
